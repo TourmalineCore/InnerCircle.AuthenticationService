@@ -49,6 +49,7 @@ jobs:
             --set "extraSecretEnvVars.InnerCircleServiceUrls__MailServiceUrl=${{ vars.MAIL_SERVICE_URL}}" \
             --set "extraSecretEnvVars.InnerCircleServiceUrls__AuthUIServiceUrl=${{ vars.AUTH_UI_SERVICE_URL }}" \
             --set "extraSecretEnvVars.InnerCircleServiceUrls__AccountsServiceUrl=${{ vars.ACCOUNTS_SERVICE_URL }}" \
+            --set "extraConfigMapEnvVars.ASPNETCORE_ENVIRONMENT=${{ vars.ASP_ENV }}" \
             --set "resources.limits.cpu=${{ vars.APP_CPU_LIMIT }}" \
             --set "resources.limits.memory=${{ vars.APP_MEMORY_LIMIT }}" \
             --set "resources.requests.cpu=${{ vars.APP_CPU_REQUESTS }}" \
@@ -82,6 +83,7 @@ jobs:
             --set "extraSecretEnvVars.InnerCircleServiceUrls__MailServiceUrl=${{ vars.MAIL_SERVICE_URL}}" \
             --set "extraSecretEnvVars.InnerCircleServiceUrls__AuthUIServiceUrl=${{ vars.AUTH_UI_SERVICE_URL }}" \
             --set "extraSecretEnvVars.InnerCircleServiceUrls__AccountsServiceUrl=${{ vars.ACCOUNTS_SERVICE_URL }}" \
+            --set "extraConfigMapEnvVars.ASPNETCORE_ENVIRONMENT=${{ vars.ASP_ENV }}" \
             --set "resources.limits.cpu=${{ vars.APP_CPU_LIMIT }}" \
             --set "resources.limits.memory=${{ vars.APP_MEMORY_LIMIT }}" \
             --set "resources.requests.cpu=${{ vars.APP_CPU_REQUESTS }}" \
