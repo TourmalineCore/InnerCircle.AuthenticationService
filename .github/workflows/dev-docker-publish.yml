@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - develop
-  pull_request:
+      - master
+      - ci/#863gxmf5j-prepare-to-prod
 
 env:
   GITHUB_REGISTRY: ghcr.io
@@ -26,8 +27,9 @@ jobs:
   deploy-to-dev-k8s:
     needs: build-image
     name: Deploy service to k8s for development environment  
-    if: github.event_name == 'push'
+    if: github.ref_name == 'develop'
     runs-on: ubuntu-22.04
+    environment: dev
     steps:
       - name: checkout
         uses: actions/checkout@v1
@@ -40,13 +42,50 @@ jobs:
             helm upgrade --install --namespace dev-inner-circle --create-namespace --values ./InnerCircle.Authentication.Service/ci/values-custom.yaml \
             --set "image.tag=${{ github.sha }}" \
             --set "ingress.enabled=true" \
-            --set "ingress.hostname=${{ secrets.DEV_HOST }}" \
-            --set "extraSecretEnvVars.ConnectionStrings__DefaultConnection=${{ secrets.DEV_POSTGRESQL_CONNECTION_STRING }}" \
-            --set "extraSecretEnvVars.AuthenticationOptions__PublicSigningKey=${{ secrets.DEV_AUTH_PUBLIC_SIGNING_KEY }}" \
-            --set "extraSecretEnvVars.AuthenticationOptions__PrivateSigningKey=${{ secrets.DEV_AUTH_PRIVATE_SIGNING_KEY }}" \
-            --set "extraSecretEnvVars.InnerCircleServiceUrls__MailServiceUrl=${{ secrets.DEV_MAIL_SERVICE_URL }}" \
-            --set "extraSecretEnvVars.InnerCircleServiceUrls__AuthUIServiceUrl=${{ secrets.DEV_AUTH_UI_SERVICE_URL }}" \
-            --set "extraSecretEnvVars.InnerCircleServiceUrls__AccountsServiceUrl=${{ secrets.DEV_ACCOUNTS_SERVICE_URL }}" \
+            --set "ingress.hostname=${{ vars.HOST }}" \
+            --set "extraSecretEnvVars.ConnectionStrings__DefaultConnection=${{ secrets.POSTGRESQL_CONNECTION_STRING }}" \
+            --set "extraSecretEnvVars.AuthenticationOptions__PublicSigningKey=${{ vars.PUBLIC_SIGNING_KEY }}" \
+            --set "extraSecretEnvVars.AuthenticationOptions__PrivateSigningKey=${{ secrets.AUTH_PRIVATE_SIGNING_KEY }}" \
+            --set "extraSecretEnvVars.InnerCircleServiceUrls__MailServiceUrl=${{ vars.MAIL_SERVICE_URL}}" \
+            --set "extraSecretEnvVars.InnerCircleServiceUrls__AuthUIServiceUrl=${{ vars.AUTH_UI_SERVICE_URL }}" \
+            --set "extraSecretEnvVars.InnerCircleServiceUrls__AccountsServiceUrl=${{ vars.ACCOUNTS_SERVICE_URL }}" \
+            --set "resources.limits.cpu=${{ vars.APP_CPU_LIMIT }}" \
+            --set "resources.limits.memory=${{ vars.APP_MEMORY_LIMIT }}" \
+            --set "resources.requests.cpu=${{ vars.APP_CPU_REQUESTS }}" \
+            --set "resources.requests.memory=${{ vars.APP_MEMORY_REQUESTS }}" \
+            "${RELEASE_NAME}" \
+            bitnami/aspnet-core
+          kubeconfig: "${{ secrets.DEV_KUBECONFIG }}"
+  
+  deploy-to-prod-k8s:
+    needs: build-image
+    name: Deploy service to k8s for production environment  
+    if: github.ref_name == 'ci/#863gxmf5j-prepare-to-prod'
+    runs-on: ubuntu-22.04
+    environment: prod
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+      - name: Deploy
+        uses: WyriHaximus/github-action-helm3@v3
+        with:
+          exec: |
+            RELEASE_NAME=auth-api
+            helm repo add bitnami https://charts.bitnami.com/bitnami
+            helm upgrade --install --namespace prod-inner-circle --create-namespace --values ./InnerCircle.Authentication.Service/ci/values-custom.yaml \
+            --set "image.tag=${{ github.sha }}" \
+            --set "ingress.enabled=true" \
+            --set "ingress.hostname=${{ vars.HOST }}" \
+            --set "extraSecretEnvVars.ConnectionStrings__DefaultConnection=${{ secrets.POSTGRESQL_CONNECTION_STRING }}" \
+            --set "extraSecretEnvVars.AuthenticationOptions__PublicSigningKey=${{ vars.PUBLIC_SIGNING_KEY }}" \
+            --set "extraSecretEnvVars.AuthenticationOptions__PrivateSigningKey=${{ secrets.AUTH_PRIVATE_SIGNING_KEY }}" \
+            --set "extraSecretEnvVars.InnerCircleServiceUrls__MailServiceUrl=${{ vars.MAIL_SERVICE_URL}}" \
+            --set "extraSecretEnvVars.InnerCircleServiceUrls__AuthUIServiceUrl=${{ vars.AUTH_UI_SERVICE_URL }}" \
+            --set "extraSecretEnvVars.InnerCircleServiceUrls__AccountsServiceUrl=${{ vars.ACCOUNTS_SERVICE_URL }}" \
+            --set "resources.limits.cpu=${{ vars.APP_CPU_LIMIT }}" \
+            --set "resources.limits.memory=${{ vars.APP_MEMORY_LIMIT }}" \
+            --set "resources.requests.cpu=${{ vars.APP_CPU_REQUESTS }}" \
+            --set "resources.requests.memory=${{ vars.APP_MEMORY_REQUESTS }}" \
             "${RELEASE_NAME}" \
             bitnami/aspnet-core
           kubeconfig: "${{ secrets.DEV_KUBECONFIG }}"
