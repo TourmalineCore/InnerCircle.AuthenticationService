@@ -138,13 +138,7 @@ else
 
 var app = builder.Build();
 
-app.UseCors(
-    corsPolicyBuilder => corsPolicyBuilder
-        .AllowAnyHeader()
-        .SetIsOriginAllowed(host => true)
-        .AllowAnyMethod()
-        .AllowAnyOrigin()
-);
+app.UseRouting();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsEnvironment("Debug"))
@@ -178,7 +172,13 @@ app
 var context = serviceScope.ServiceProvider.GetRequiredService<AppDbContext>();
 context.Database.Migrate();
 
-app.UseRouting();
+app.UseCors(
+    corsPolicyBuilder => corsPolicyBuilder
+        .AllowAnyHeader()
+        .SetIsOriginAllowed(host => true)
+        .AllowAnyMethod()
+        .AllowAnyOrigin()
+);
 
 app.UseHttpsRedirection();
 
