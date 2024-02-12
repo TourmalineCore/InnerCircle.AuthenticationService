@@ -109,5 +109,25 @@ namespace InnerCircle.Authentication.Service.Services
             await _userManager.ResetPasswordAsync(user, passwordChangeModel.PasswordResetToken,
                 passwordChangeModel.NewPassword);
         }
+
+        public async Task<string> GeneratePasswordHashForUserAsync(string corporateEmail, string newPassword)
+        {
+            var user = await _findUserQuery.FindUserByCorporateEmailAsync(corporateEmail);
+
+            if (user == null)
+            {
+                throw new NullReferenceException($"User with the corporate email [{corporateEmail}] doesn't exists");
+            }
+
+            var newPasswordValidationResult = await _passwordValidator.ValidateAsync(_userManager, user, newPassword);
+
+            if (!newPasswordValidationResult.Succeeded)
+            {
+                throw new ArgumentException("New password is invalid");
+            }
+
+
+            return _userManager.PasswordHasher.HashPassword(user, newPassword);
+        }
     }
 }

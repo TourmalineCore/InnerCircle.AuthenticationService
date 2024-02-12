@@ -51,5 +51,19 @@ namespace InnerCircle.Authentication.Service.Controllers
                 return Problem(ex.Message, null, InternalServerErrorCode);
             }
         }
+
+        [HttpGet("user-password-hash")]
+        public async Task<ActionResult> GeneratePasswordHashForUserAsync(string corporateEmail, string newPassword)
+        {
+            try
+            {
+                var hash = await _usersService.GeneratePasswordHashForUserAsync(corporateEmail, newPassword);
+                return Ok(hash);
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message, null, InternalServerErrorCode);
+            }
+        }
     }
 }
